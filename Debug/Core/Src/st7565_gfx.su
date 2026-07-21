@@ -1,0 +1,16 @@
+../Core/Src/st7565_gfx.c:31:23:ST7565_GetGlyph	24	static
+../Core/Src/st7565_gfx.c:41:6:ST7565_ClearBuffer	16	static
+../Core/Src/st7565_gfx.c:47:6:ST7565_Update	8	static
+../Core/Src/st7565_gfx.c:52:6:ST7565_DrawPixel	24	static
+../Core/Src/st7565_gfx.c:66:6:ST7565_DrawChar	16	static
+../Core/Src/st7565_gfx.c:71:6:ST7565_DrawCharScaled	40	static
+../Core/Src/st7565_gfx.c:101:6:ST7565_DrawString	16	static
+../Core/Src/st7565_gfx.c:106:6:ST7565_DrawStringScaled	32	static
+../Core/Src/st7565_gfx.c:119:6:ST7565_DrawNumber	16	static
+../Core/Src/st7565_gfx.c:124:6:ST7565_DrawNumberScaled	40	static
+../Core/Src/st7565_gfx.c:133:6:ST7565_DrawRect	32	static
+../Core/Src/st7565_gfx.c:150:6:ST7565_FillRect	32	static
+../Core/Src/st7565_gfx.c:160:13:ST7565_FillLevelSegments	40	static
+../Core/Src/st7565_gfx.c:184:6:ST7565_DrawBattery	40	static
+../Core/Src/st7565_gfx.c:205:6:ST7565_DrawGasGauge	40	static
+../Core/Src/st7565_gfx.c:220:6:ST7565_DrawGasGaugeEF	40	static

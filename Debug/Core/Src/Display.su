@@ -1,0 +1,14 @@
+../Core/Src/Display.c:20:20:ST7565_DelayCycles	16	static,ignoring_inline_asm
+../Core/Src/Display.c:31:20:ST7565_SetDataBus	32	static,ignoring_inline_asm
+../Core/Src/Display.c:37:6:ST7565_BusInit	40	static
+../Core/Src/Display.c:74:20:ST7565_Strobe	16	static
+../Core/Src/Display.c:99:6:ST7565_WriteCommand	16	static
+../Core/Src/Display.c:104:6:ST7565_WriteData	16	static
+../Core/Src/Display.c:109:6:ST7565_HardReset	8	static
+../Core/Src/Display.c:144:6:ST7565_Init	16	static
+../Core/Src/Display.c:178:6:ST7565_DisplayOn	16	static
+../Core/Src/Display.c:183:6:ST7565_SetStartLine	16	static
+../Core/Src/Display.c:188:6:ST7565_SetPage	16	static
+../Core/Src/Display.c:193:6:ST7565_SetColumn	16	static
+../Core/Src/Display.c:199:6:ST7565_SetContrast	16	static
+../Core/Src/Display.c:205:6:ST7565_WriteBuffer	32	static

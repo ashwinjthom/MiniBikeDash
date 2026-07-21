@@ -1,0 +1,14 @@
+../Core/Src/Display.c:20:20:ST7565_DelayCycles	2
+../Core/Src/Display.c:31:20:ST7565_SetDataBus	1
+../Core/Src/Display.c:37:6:ST7565_BusInit	1
+../Core/Src/Display.c:74:20:ST7565_Strobe	2
+../Core/Src/Display.c:99:6:ST7565_WriteCommand	1
+../Core/Src/Display.c:104:6:ST7565_WriteData	1
+../Core/Src/Display.c:109:6:ST7565_HardReset	1
+../Core/Src/Display.c:144:6:ST7565_Init	1
+../Core/Src/Display.c:178:6:ST7565_DisplayOn	2
+../Core/Src/Display.c:183:6:ST7565_SetStartLine	1
+../Core/Src/Display.c:188:6:ST7565_SetPage	1
+../Core/Src/Display.c:193:6:ST7565_SetColumn	1
+../Core/Src/Display.c:199:6:ST7565_SetContrast	1
+../Core/Src/Display.c:205:6:ST7565_WriteBuffer	5
