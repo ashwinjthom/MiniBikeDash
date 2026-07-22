@@ -5,8 +5,8 @@
  *      Author: atdin
  */
 
-#ifndef INC_DISPLAY_H_
-#define INC_DISPLAY_H_
+#ifndef INC_ST7565_8080_H_
+#define INC_ST7565_8080_H_
 
 #include "stm32g4xx_hal.h"
 #include <stdint.h>
@@ -82,4 +82,4 @@ void ST7565_SetContrast(uint8_t value6bit);
 void ST7565_WriteBuffer(const uint8_t *buf, uint32_t len);
 
 
-#endif /* INC_DISPLAY_H_ */
+#endif /* INC_ST7565_8080_H_ */

@@ -1,21 +1,21 @@
-/*
- * Display.c
- *
- *  Created on: Jul 14, 2026
- *      Author: atdin
- */
-
-#include "Display.h"
+#include "st7565_8080.h"
 
 /* ---------------------------------------------------------------------------
- * Small delay in core cycles, used to respect the ST7565R's tCYC8/tDS8/tCCLW
- * timing (min ~240 ns cycle, ~40 ns data setup, ~80 ns WR pulse width @3.3V,
- * see datasheet Table 24). Tune STM7565_STROBE_DELAY for your SystemCoreClock
- * if you see garbage on the display -- a handful of NOPs is plenty at typical
- * STM32G4 clock speeds (>=100 MHz), but bump it up if you clock the core
- * slower.
+ * Small delay used to respect the ST7565R's tCYC8/tDS8/tCCLW timing
+ * (min ~240 ns cycle, ~40 ns data setup, ~80 ns WR pulse width @VDD=3.3V,
+ * see datasheet Table 24). This is computed from SystemCoreClock in
+ * ST7565_BusInit() rather than hardcoded, so it stays correct if you change
+ * the MCU clock speed later -- a fixed NOP count tuned for one clock speed
+ * silently becomes too short (timing violation) if you speed the clock up,
+ * or unnecessarily slow if you slow it down.
  * -------------------------------------------------------------------------*/
-#define ST7565_STROBE_DELAY   8u
+/* Hardcoded for a 144 MHz core clock: 14 cycles ~= 97 ns per delay phase,
+ * comfortably above the ST7565R's tCCLW (80 ns WR pulse width) and tDS8
+ * (40 ns data setup) minimums at VDD=3.3V. If you change SystemCoreClock,
+ * recompute this as: cycles = (SystemCoreClock_Hz / 1000000) * 100 / 1000
+ * (target ~100 ns per phase), or switch back to computing it at runtime in
+ * ST7565_BusInit(). */
+static uint32_t s_strobe_delay_cycles = 14;
 
 static inline void ST7565_DelayCycles(uint32_t cycles)
 {
@@ -84,13 +84,13 @@ static inline void ST7565_Strobe(uint8_t a0, uint8_t byte)
 
     /* Assert chip select */
     ST7565_CTRL_PORT->BSRR = ST7565_CS_PIN << 16;
-    ST7565_DelayCycles(ST7565_STROBE_DELAY);
+    ST7565_DelayCycles(s_strobe_delay_cycles);
 
     /* WR low pulse (tCCLW) -- data is latched on the rising edge */
     ST7565_CTRL_PORT->BSRR = ST7565_WR_PIN << 16;
-    ST7565_DelayCycles(ST7565_STROBE_DELAY);
+    ST7565_DelayCycles(s_strobe_delay_cycles);
     ST7565_CTRL_PORT->BSRR = ST7565_WR_PIN;
-    ST7565_DelayCycles(ST7565_STROBE_DELAY);
+    ST7565_DelayCycles(s_strobe_delay_cycles);
 
     /* Deassert chip select */
     ST7565_CTRL_PORT->BSRR = ST7565_CS_PIN;

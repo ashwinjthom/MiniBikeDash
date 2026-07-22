@@ -1,7 +1,7 @@
 #ifndef ST7565_GFX_H
 #define ST7565_GFX_H
 
-#include "Display.h"
+#include <st7565_8080.h>
 /* Simple in-RAM framebuffer + text layer for the ST7565 driver.
  *
  * Typical usage in main():

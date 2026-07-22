@@ -14,6 +14,8 @@
 extern "C" {
 #endif
 
+#define ADC_SAMPLE_HZ           10      // how often TIM3 triggers ADC1
+#define EMA_UPDATE_HZ           1.0f    // how often EMA/rate-limiter runs
 /* ---------------------------------------------------------------------
  * Public API
  * ------------------------------------------------------------------- */

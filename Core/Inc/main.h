@@ -28,6 +28,17 @@ extern "C" {
 
 /* Includes ------------------------------------------------------------------*/
 #include "stm32g4xx_hal.h"
+#include "stm32g4xx_ll_ucpd.h"
+#include "stm32g4xx_ll_bus.h"
+#include "stm32g4xx_ll_cortex.h"
+#include "stm32g4xx_ll_rcc.h"
+#include "stm32g4xx_ll_system.h"
+#include "stm32g4xx_ll_utils.h"
+#include "stm32g4xx_ll_pwr.h"
+#include "stm32g4xx_ll_gpio.h"
+#include "stm32g4xx_ll_dma.h"
+
+#include "stm32g4xx_ll_exti.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -57,6 +68,8 @@ void Error_Handler(void);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
+#define CAN_STATUS_Pin GPIO_PIN_13
+#define CAN_STATUS_GPIO_Port GPIOC
 #define CAN_SHDN_Pin GPIO_PIN_14
 #define CAN_SHDN_GPIO_Port GPIOC
 #define LCD_DB7_Pin GPIO_PIN_0
@@ -85,9 +98,7 @@ void Error_Handler(void);
 #define REV_SIGNAL_GPIO_Port GPIOB
 #define KILL_SIGNAL_Pin GPIO_PIN_12
 #define KILL_SIGNAL_GPIO_Port GPIOB
-#define CAN_STATUS_Pin GPIO_PIN_8
-#define CAN_STATUS_GPIO_Port GPIOA
-#define GP_STATUS_Pin GPIO_PIN_9
+#define GP_STATUS_Pin GPIO_PIN_8
 #define GP_STATUS_GPIO_Port GPIOA
 
 /* USER CODE BEGIN Private defines */

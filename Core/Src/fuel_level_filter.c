@@ -41,12 +41,10 @@
  * Configuration
  * ------------------------------------------------------------------- */
 
-#define ADC_SAMPLE_HZ           10      // how often TIM3 triggers ADC1
 #define MEDIAN_WINDOW_SEC       8       // window used for median filter
 #define MEDIAN_WINDOW_LEN       (ADC_SAMPLE_HZ * MEDIAN_WINDOW_SEC)
 
 #define EMA_TIME_CONSTANT_SEC   25.0f   // slow smoothing after median
-#define EMA_UPDATE_HZ           1.0f    // how often EMA/rate-limiter runs
 
 #define MAX_CHANGE_PERCENT_PER_SEC   0.5f  // rate limiter for displayed value
 
