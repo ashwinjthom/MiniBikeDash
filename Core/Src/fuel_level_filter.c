@@ -41,12 +41,21 @@
  * Configuration
  * ------------------------------------------------------------------- */
 
+// ADC_SAMPLE_HZ and EMA_UPDATE_HZ are defined in fuel_level_filter.h
+// so main.c can reference them too.
+
 #define MEDIAN_WINDOW_SEC       8       // window used for median filter
 #define MEDIAN_WINDOW_LEN       (ADC_SAMPLE_HZ * MEDIAN_WINDOW_SEC)
 
-#define EMA_TIME_CONSTANT_SEC   25.0f   // slow smoothing after median
+// Minimum number of real samples required before FuelSensor_Update()
+// will produce output, rather than trusting a median computed from
+// only a handful of samples (or a stale zero pulled before ADC1's
+// first DMA conversion actually completed).
+#define MEDIAN_MIN_SAMPLES      (MEDIAN_WINDOW_LEN / 2)  // half the window, ~4s worth
 
-#define MAX_CHANGE_PERCENT_PER_SEC   0.5f  // rate limiter for displayed value
+#define EMA_TIME_CONSTANT_SEC   3.0f   // slow smoothing after median
+
+#define MAX_CHANGE_PERCENT_PER_SEC   5.0f  // rate limiter for displayed value
 
 #define ADC_MAX_VALUE           4095.0f // 12-bit ADC
 
@@ -67,6 +76,7 @@ static uint16_t median_ring[MEDIAN_WINDOW_LEN];
 static uint16_t median_scratch[MEDIAN_WINDOW_LEN]; // sort workspace
 static uint16_t median_ring_idx = 0;
 static uint8_t  median_ring_filled = 0; // becomes 1 once buffer wraps once
+static uint32_t total_samples_collected = 0; // never resets/wraps like median_ring_idx does
 
 // Filter state
 static float ema_value = -1.0f;       // -1 = "not yet initialized"
@@ -88,6 +98,7 @@ void FuelSensor_Init(void)
     memset(median_ring, 0, sizeof(median_ring));
     median_ring_idx = 0;
     median_ring_filled = 0;
+    total_samples_collected = 0;
     ema_value = -1.0f;
     displayed_value = -1.0f;
 
@@ -121,10 +132,22 @@ void FuelSensor_PollRawSample(void)
 
     median_ring[median_ring_idx] = raw;
     median_ring_idx++;
+    total_samples_collected++;
     if (median_ring_idx >= MEDIAN_WINDOW_LEN) {
         median_ring_idx = 0;
         median_ring_filled = 1;
     }
+}
+
+/* ---------------------------------------------------------------------
+ * @brief Returns 1 once enough real samples have been collected for
+ *        FuelSensor_Update() to produce a trustworthy value, 0 while
+ *        still in the startup warm-up window.
+ * ------------------------------------------------------------------- */
+
+uint8_t FuelSensor_IsReady(void)
+{
+    return (total_samples_collected >= MEDIAN_MIN_SAMPLES) ? 1 : 0;
 }
 
 /* ---------------------------------------------------------------------
@@ -205,6 +228,15 @@ static float raw_to_percent(uint16_t raw)
 
 float FuelSensor_Update(float dt_sec)
 {
+    // During startup, before enough real samples exist, don't let a
+    // noisy/short median lock in ema_value (which initializes directly
+    // from the first call). Return -1.0f as a sentinel meaning
+    // "not ready yet" -- caller should hold off displaying/using the
+    // value until FuelSensor_IsReady() returns 1.
+    if (!FuelSensor_IsReady()) {
+        return -1.0f;
+    }
+
     uint16_t raw_median = compute_median();
     float percent_median = raw_to_percent(raw_median);
 

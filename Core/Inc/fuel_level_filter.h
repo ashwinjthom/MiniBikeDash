@@ -14,8 +14,6 @@
 extern "C" {
 #endif
 
-#define ADC_SAMPLE_HZ           10      // how often TIM3 triggers ADC1
-#define EMA_UPDATE_HZ           1.0f    // how often EMA/rate-limiter runs
 /* ---------------------------------------------------------------------
  * Public API
  * ------------------------------------------------------------------- */
@@ -57,6 +55,31 @@ void FuelSensor_PollRawSample(void);
  *         CAN message directly.
  */
 float FuelSensor_Update(float dt_sec);
+
+/**
+ * @brief Check whether enough real samples have been collected since
+ *        FuelSensor_Init() for FuelSensor_Update() to return a
+ *        trustworthy value.
+ *
+ * While this returns 0, FuelSensor_Update() returns -1.0f (a sentinel,
+ * not a valid percentage) instead of a real reading. Check this (or
+ * just check for a negative return from FuelSensor_Update()) before
+ * displaying/using the fuel level during the first several seconds
+ * after startup.
+ *
+ * @return 1 if ready, 0 if still warming up.
+ */
+uint8_t FuelSensor_IsReady(void);
+
+/* ---------------------------------------------------------------------
+ * Config constants -- exposed here (not just in the .c file) so
+ * main.c can reference them directly, e.g. for computing polling
+ * intervals with HAL_GetTick(), instead of hardcoding matching
+ * numbers in two separate files.
+ * ------------------------------------------------------------------- */
+
+#define ADC_SAMPLE_HZ           10      // how often TIM3 triggers ADC1 / how often to call FuelSensor_PollRawSample()
+#define EMA_UPDATE_HZ           1.0f    // how often to call FuelSensor_Update()
 
 #ifdef __cplusplus
 }

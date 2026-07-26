@@ -57,6 +57,7 @@ PCD_HandleTypeDef hpcd_USB_FS;
 uint16_t ADC1_Value;
 uint16_t ADC2_Value;
 uint16_t fuel_level;
+uint16_t fuel_bars;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -70,7 +71,7 @@ static void MX_ADC2_Init(void);
 static void MX_UCPD1_Init(void);
 static void MX_TIM3_Init(void);
 /* USER CODE BEGIN PFP */
-void MY_Delay(volatile uint32_t count);
+
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -116,52 +117,68 @@ int main(void)
   MX_TIM3_Init();
   /* USER CODE BEGIN 2 */
   FuelSensor_Init();
-  ST7565_Init(0x00);   // bus init + panel init; 0x20 is a starting contrast value, tune to taste
+  ST7565_Init(0x00);   // bus init + panel init; 0x00 is a starting contrast value, tune to taste
   uint32_t last_poll_tick = HAL_GetTick();
   uint32_t last_update_tick = HAL_GetTick();
+  uint32_t last_display_tick = HAL_GetTick();
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_8, GPIO_PIN_SET);
-  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_9, GPIO_PIN_SET);
+  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_8, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_9, GPIO_PIN_RESET);
   //HAL_GPIO_WritePin(GPIOB, GPIO_PIN_12, GPIO_PIN_SET);
-  HAL_Delay(500);
+  //HAL_Delay(500);
   while (1)
   {
-	  //HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_9);
-
 	  uint32_t now = HAL_GetTick();
 	  // Poll raw ADC sample at ADC_SAMPLE_HZ
 	  if (now - last_poll_tick >= (1000 / ADC_SAMPLE_HZ)) {
 		  last_poll_tick = now;
-		  HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_8);
 		  FuelSensor_PollRawSample();
+		  // One toggle per completed poll makes this visible on an LED.
+		  HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_8);
 	  }
 	  // Run EMA + rate limiter at EMA_UPDATE_HZ
 	  if (now - last_update_tick >= (uint32_t)(1000.0f / EMA_UPDATE_HZ)) {
-		  float dt = (now - last_update_tick) / 1000.0f;
+		  float dt_sec = (now - last_update_tick) / 1000.0f;
 		  last_update_tick = now;
-		  float fuel_pct = FuelSensor_Update(dt);
-		  // -> send fuel_pct to display/gauge/CAN message/etc.
-		  fuel_level = floorf(fuel_pct);
+		  float fuel_pct = FuelSensor_Update(dt_sec);
+		  if (fuel_pct >= 0.0f) {
+			  // Real reading -- safe to use/display.
+			  fuel_level = floorf(fuel_pct);
+		      // Send it wherever it needs to go, e.g.:
+		      //   - update a gauge/display driver
+		      //   - pack into a CAN message and transmit
+		      //   - store for a UART debug print
+			  if(fuel_level >= 75) fuel_bars = 4;
+			  else if(fuel_level >= 50) fuel_bars = 3;
+			  else if(fuel_level>=25) fuel_bars = 2;
+			  else fuel_bars = 1;
+		  } else {
+		      // Still warming up (first few seconds after startup) --
+		      // don't display fuel_level_pct yet, or show a distinct
+		      // "reading..." state on your gauge/display instead of 0%.
+			  fuel_bars = 0;
+		  }
+		  // One toggle per completed filter update makes this visible on an LED.
 		  HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_9);
 	  }
 
-	  HAL_ADC_Start(&hadc1);
-	  HAL_ADC_PollForConversion(&hadc1, 20);
-	  ADC1_Value = HAL_ADC_GetValue(&hadc1);
+	  // Keep the display refresh periodic without blocking the 10 Hz sampler.
+	  if (now - last_display_tick >= 500U) {
+		  last_display_tick = now;
 
-	  HAL_ADC_Start(&hadc2);
-	  HAL_ADC_PollForConversion(&hadc2, 20);
-	  ADC2_Value = HAL_ADC_GetValue(&hadc2);
+		  HAL_ADC_Start(&hadc2);
+		  HAL_ADC_PollForConversion(&hadc2, 20);
+		  ADC2_Value = HAL_ADC_GetValue(&hadc2);
 
-	  ST7565_ClearBuffer();
-	  ST7565_DrawNumberScaled(0, 0, fuel_level, 4);   // x=0, y=0, value=count, 4 times bigger
-
-	  ST7565_DrawBattery(100, 2, 20, 12, 5);   // x=100, y=2, 20x12px, 3 of 5 bars lit
-	  ST7565_DrawGasGaugeEF(93, 20, 20, 12, 4);    // x=100, y=20, 40x8px, half full (2 of 4)
-	  ST7565_Update();	// pushes the framebuffer out over the 8080 bus
+		  ST7565_ClearBuffer();
+		  ST7565_DrawNumberScaled(0, 0, fuel_level, 4);
+		  ST7565_DrawBattery(100, 2, 20, 12, 5);
+		  ST7565_DrawGasGaugeEF(93, 20, 20, 12, fuel_bars);
+		  ST7565_Update();	// pushes the framebuffer out over the 8080 bus
+	  }
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */

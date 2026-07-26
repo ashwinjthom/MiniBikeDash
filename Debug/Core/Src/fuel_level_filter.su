@@ -1,6 +1,7 @@
-../Core/Src/fuel_level_filter.c:86:6:FuelSensor_Init	8	static
-../Core/Src/fuel_level_filter.c:114:6:FuelSensor_PollRawSample	16	static
-../Core/Src/fuel_level_filter.c:136:13:insertion_sort	24	static
-../Core/Src/fuel_level_filter.c:149:17:compute_median	24	static
-../Core/Src/fuel_level_filter.c:176:14:raw_to_percent	32	static
-../Core/Src/fuel_level_filter.c:206:7:FuelSensor_Update	40	static
+../Core/Src/fuel_level_filter.c:96:6:FuelSensor_Init	8	static
+../Core/Src/fuel_level_filter.c:125:6:FuelSensor_PollRawSample	16	static
+../Core/Src/fuel_level_filter.c:148:9:FuelSensor_IsReady	4	static
+../Core/Src/fuel_level_filter.c:159:13:insertion_sort	24	static
+../Core/Src/fuel_level_filter.c:172:17:compute_median	24	static
+../Core/Src/fuel_level_filter.c:199:14:raw_to_percent	32	static
+../Core/Src/fuel_level_filter.c:229:7:FuelSensor_Update	40	static
