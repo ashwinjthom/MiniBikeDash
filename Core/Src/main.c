@@ -21,9 +21,9 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-#include <math.h>
 #include <st7565_8080.h>
 #include "st7565_gfx.h"
+#include "battery_level_filter.h"
 #include "fuel_level_filter.h"
 /* USER CODE END Includes */
 
@@ -46,6 +46,7 @@
 ADC_HandleTypeDef hadc1;
 ADC_HandleTypeDef hadc2;
 DMA_HandleTypeDef hdma_adc1;
+DMA_HandleTypeDef hdma_adc2;
 
 FDCAN_HandleTypeDef hfdcan1;
 
@@ -54,10 +55,10 @@ TIM_HandleTypeDef htim3;
 PCD_HandleTypeDef hpcd_USB_FS;
 
 /* USER CODE BEGIN PV */
-uint16_t ADC1_Value;
-uint16_t ADC2_Value;
 uint16_t fuel_level;
 uint16_t fuel_bars;
+uint16_t battery_level;
+uint8_t battery_bars;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -111,11 +112,13 @@ int main(void)
   MX_DMA_Init();
   MX_ADC1_Init();
   MX_FDCAN1_Init();
-  //MX_USB_PCD_Init();
+  MX_USB_PCD_Init();
   MX_ADC2_Init();
-  //MX_UCPD1_Init();
+  MX_UCPD1_Init();
   MX_TIM3_Init();
   /* USER CODE BEGIN 2 */
+  /* ADC2 must be armed before TIM3 begins issuing TRGO events. */
+  BatterySensor_Init();
   FuelSensor_Init();
   ST7565_Init(0x00);   // bus init + panel init; 0x00 is a starting contrast value, tune to taste
   uint32_t last_poll_tick = HAL_GetTick();
@@ -136,6 +139,7 @@ int main(void)
 	  if (now - last_poll_tick >= (1000 / ADC_SAMPLE_HZ)) {
 		  last_poll_tick = now;
 		  FuelSensor_PollRawSample();
+		  BatterySensor_PollRawSample();
 		  // One toggle per completed poll makes this visible on an LED.
 		  HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_8);
 	  }
@@ -144,9 +148,17 @@ int main(void)
 		  float dt_sec = (now - last_update_tick) / 1000.0f;
 		  last_update_tick = now;
 		  float fuel_pct = FuelSensor_Update(dt_sec);
+		  float battery_pct = BatterySensor_Update(dt_sec);
+		  if (battery_pct >= 0.0f) {
+			  battery_level = (uint16_t)battery_pct;
+			  /* Round non-zero percentages up to the 1-5 icon segment range. */
+			  battery_bars = (uint8_t)((battery_level + 19U) / 20U);
+		  } else {
+			  battery_bars = 0U;
+		  }
 		  if (fuel_pct >= 0.0f) {
 			  // Real reading -- safe to use/display.
-			  fuel_level = floorf(fuel_pct);
+			  fuel_level = (uint16_t)fuel_pct;
 		      // Send it wherever it needs to go, e.g.:
 		      //   - update a gauge/display driver
 		      //   - pack into a CAN message and transmit
@@ -165,17 +177,13 @@ int main(void)
 		  HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_9);
 	  }
 
-	  // Keep the display refresh periodic without blocking the 10 Hz sampler.
+	  // Keep the display refresh periodic without blocking the DMA samplers.
 	  if (now - last_display_tick >= 500U) {
 		  last_display_tick = now;
 
-		  HAL_ADC_Start(&hadc2);
-		  HAL_ADC_PollForConversion(&hadc2, 20);
-		  ADC2_Value = HAL_ADC_GetValue(&hadc2);
-
 		  ST7565_ClearBuffer();
 		  ST7565_DrawNumberScaled(0, 0, fuel_level, 4);
-		  ST7565_DrawBattery(100, 2, 20, 12, 5);
+		  ST7565_DrawBattery(100, 2, 20, 12, battery_bars);
 		  ST7565_DrawGasGaugeEF(93, 20, 20, 12, fuel_bars);
 		  ST7565_Update();	// pushes the framebuffer out over the 8080 bus
 	  }
@@ -332,9 +340,9 @@ static void MX_ADC2_Init(void)
   hadc2.Init.ContinuousConvMode = DISABLE;
   hadc2.Init.NbrOfConversion = 1;
   hadc2.Init.DiscontinuousConvMode = DISABLE;
-  hadc2.Init.ExternalTrigConv = ADC_SOFTWARE_START;
-  hadc2.Init.ExternalTrigConvEdge = ADC_EXTERNALTRIGCONVEDGE_NONE;
-  hadc2.Init.DMAContinuousRequests = DISABLE;
+  hadc2.Init.ExternalTrigConv = ADC_EXTERNALTRIG_T3_TRGO;
+  hadc2.Init.ExternalTrigConvEdge = ADC_EXTERNALTRIGCONVEDGE_RISING;
+  hadc2.Init.DMAContinuousRequests = ENABLE;
   hadc2.Init.Overrun = ADC_OVR_DATA_PRESERVED;
   hadc2.Init.OversamplingMode = DISABLE;
   if (HAL_ADC_Init(&hadc2) != HAL_OK)
@@ -346,7 +354,8 @@ static void MX_ADC2_Init(void)
   */
   sConfig.Channel = ADC_CHANNEL_15;
   sConfig.Rank = ADC_REGULAR_RANK_1;
-  sConfig.SamplingTime = ADC_SAMPLETIME_2CYCLES_5;
+  /* Battery dividers are high impedance; give the ADC capacitor time to settle. */
+  sConfig.SamplingTime = ADC_SAMPLETIME_92CYCLES_5;
   sConfig.SingleDiff = ADC_SINGLE_ENDED;
   sConfig.OffsetNumber = ADC_OFFSET_NONE;
   sConfig.Offset = 0;
@@ -536,6 +545,9 @@ static void MX_DMA_Init(void)
   /* DMA1_Channel1_IRQn interrupt configuration */
   HAL_NVIC_SetPriority(DMA1_Channel1_IRQn, 0, 0);
   HAL_NVIC_EnableIRQ(DMA1_Channel1_IRQn);
+  /* DMA1_Channel2_IRQn interrupt configuration */
+  HAL_NVIC_SetPriority(DMA1_Channel2_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(DMA1_Channel2_IRQn);
 
 }
 

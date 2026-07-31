@@ -1,5 +1,5 @@
-Core/Src/main.o: ../Core/Src/main.c ../Core/Inc/main.h \
- ../Drivers/STM32G4xx_HAL_Driver/Inc/stm32g4xx_hal.h \
+Core/Src/battery_level_filter.o: ../Core/Src/battery_level_filter.c \
+ ../Core/Inc/main.h ../Drivers/STM32G4xx_HAL_Driver/Inc/stm32g4xx_hal.h \
  ../Core/Inc/stm32g4xx_hal_conf.h \
  ../Drivers/STM32G4xx_HAL_Driver/Inc/stm32g4xx_hal_rcc.h \
  ../Drivers/STM32G4xx_HAL_Driver/Inc/stm32g4xx_hal_def.h \
@@ -44,7 +44,6 @@ Core/Src/main.o: ../Core/Src/main.c ../Core/Inc/main.h \
  ../Drivers/STM32G4xx_HAL_Driver/Inc/stm32g4xx_ll_dma.h \
  ../Drivers/STM32G4xx_HAL_Driver/Inc/stm32g4xx_ll_dmamux.h \
  ../Drivers/STM32G4xx_HAL_Driver/Inc/stm32g4xx_ll_exti.h \
- ../Core/Inc/st7565_8080.h ../Core/Inc/st7565_gfx.h \
  ../Core/Inc/battery_level_filter.h ../Core/Inc/fuel_level_filter.h
 ../Core/Inc/main.h:
 ../Drivers/STM32G4xx_HAL_Driver/Inc/stm32g4xx_hal.h:
@@ -92,7 +91,5 @@ Core/Src/main.o: ../Core/Src/main.c ../Core/Inc/main.h \
 ../Drivers/STM32G4xx_HAL_Driver/Inc/stm32g4xx_ll_dma.h:
 ../Drivers/STM32G4xx_HAL_Driver/Inc/stm32g4xx_ll_dmamux.h:
 ../Drivers/STM32G4xx_HAL_Driver/Inc/stm32g4xx_ll_exti.h:
-../Core/Inc/st7565_8080.h:
-../Core/Inc/st7565_gfx.h:
 ../Core/Inc/battery_level_filter.h:
 ../Core/Inc/fuel_level_filter.h:

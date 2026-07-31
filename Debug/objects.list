@@ -1,4 +1,5 @@
 "./Core/Src/Rev_Counter.o"
+"./Core/Src/battery_level_filter.o"
 "./Core/Src/fuel_level_filter.o"
 "./Core/Src/main.o"
 "./Core/Src/st7565_8080.o"
