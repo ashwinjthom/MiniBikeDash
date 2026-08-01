@@ -25,6 +25,7 @@
 #include "st7565_gfx.h"
 #include "battery_level_filter.h"
 #include "fuel_level_filter.h"
+#include "Rev_Counter.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -51,6 +52,7 @@ DMA_HandleTypeDef hdma_adc2;
 FDCAN_HandleTypeDef hfdcan1;
 
 TIM_HandleTypeDef htim3;
+TIM_HandleTypeDef htim6;
 
 PCD_HandleTypeDef hpcd_USB_FS;
 
@@ -59,6 +61,7 @@ uint16_t fuel_level;
 uint16_t fuel_bars;
 uint16_t battery_level;
 uint8_t battery_bars;
+uint32_t engine_rpm;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -71,6 +74,7 @@ static void MX_USB_PCD_Init(void);
 static void MX_ADC2_Init(void);
 static void MX_UCPD1_Init(void);
 static void MX_TIM3_Init(void);
+static void MX_TIM6_Init(void);
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
@@ -116,10 +120,15 @@ int main(void)
   MX_ADC2_Init();
   MX_UCPD1_Init();
   MX_TIM3_Init();
+  MX_TIM6_Init();
   /* USER CODE BEGIN 2 */
-  /* ADC2 must be armed before TIM3 begins issuing TRGO events. */
+  /* ADC2 must be armed before TIM6 begins issuing TRGO events. */
   BatterySensor_Init();
   FuelSensor_Init();
+  /* TIM3 CH2 is PB5, configured in CubeMX for falling-edge input capture. */
+  if (RevCounter_Start(&htim3, TIM_CHANNEL_2) != HAL_OK) {
+    Error_Handler();
+  }
   ST7565_Init(0x00);   // bus init + panel init; 0x00 is a starting contrast value, tune to taste
   uint32_t last_poll_tick = HAL_GetTick();
   uint32_t last_update_tick = HAL_GetTick();
@@ -135,6 +144,8 @@ int main(void)
   while (1)
   {
 	  uint32_t now = HAL_GetTick();
+	  RevCounter_Update(now);
+	  engine_rpm = RevCounter_GetRPM();
 	  // Poll raw ADC sample at ADC_SAMPLE_HZ
 	  if (now - last_poll_tick >= (1000 / ADC_SAMPLE_HZ)) {
 		  last_poll_tick = now;
@@ -182,7 +193,7 @@ int main(void)
 		  last_display_tick = now;
 
 		  ST7565_ClearBuffer();
-		  ST7565_DrawNumberScaled(0, 0, fuel_level, 4);
+		  ST7565_DrawNumberScaled(0, 0, engine_rpm, 4);
 		  ST7565_DrawBattery(100, 2, 20, 12, battery_bars);
 		  ST7565_DrawGasGaugeEF(93, 20, 20, 12, fuel_bars);
 		  ST7565_Update();	// pushes the framebuffer out over the 8080 bus
@@ -273,7 +284,7 @@ static void MX_ADC1_Init(void)
   hadc1.Init.ContinuousConvMode = DISABLE;
   hadc1.Init.NbrOfConversion = 1;
   hadc1.Init.DiscontinuousConvMode = DISABLE;
-  hadc1.Init.ExternalTrigConv = ADC_EXTERNALTRIG_T3_TRGO;
+  hadc1.Init.ExternalTrigConv = ADC_EXTERNALTRIG_T6_TRGO;
   hadc1.Init.ExternalTrigConvEdge = ADC_EXTERNALTRIGCONVEDGE_RISING;
   hadc1.Init.DMAContinuousRequests = ENABLE;
   hadc1.Init.Overrun = ADC_OVR_DATA_PRESERVED;
@@ -340,7 +351,7 @@ static void MX_ADC2_Init(void)
   hadc2.Init.ContinuousConvMode = DISABLE;
   hadc2.Init.NbrOfConversion = 1;
   hadc2.Init.DiscontinuousConvMode = DISABLE;
-  hadc2.Init.ExternalTrigConv = ADC_EXTERNALTRIG_T3_TRGO;
+  hadc2.Init.ExternalTrigConv = ADC_EXTERNALTRIG_T6_TRGO;
   hadc2.Init.ExternalTrigConvEdge = ADC_EXTERNALTRIGCONVEDGE_RISING;
   hadc2.Init.DMAContinuousRequests = ENABLE;
   hadc2.Init.Overrun = ADC_OVR_DATA_PRESERVED;
@@ -354,8 +365,7 @@ static void MX_ADC2_Init(void)
   */
   sConfig.Channel = ADC_CHANNEL_15;
   sConfig.Rank = ADC_REGULAR_RANK_1;
-  /* Battery dividers are high impedance; give the ADC capacitor time to settle. */
-  sConfig.SamplingTime = ADC_SAMPLETIME_92CYCLES_5;
+  sConfig.SamplingTime = ADC_SAMPLETIME_2CYCLES_5;
   sConfig.SingleDiff = ADC_SINGLE_ENDED;
   sConfig.OffsetNumber = ADC_OFFSET_NONE;
   sConfig.Offset = 0;
@@ -426,14 +436,15 @@ static void MX_TIM3_Init(void)
 
   TIM_ClockConfigTypeDef sClockSourceConfig = {0};
   TIM_MasterConfigTypeDef sMasterConfig = {0};
+  TIM_IC_InitTypeDef sConfigIC = {0};
 
   /* USER CODE BEGIN TIM3_Init 1 */
 
   /* USER CODE END TIM3_Init 1 */
   htim3.Instance = TIM3;
-  htim3.Init.Prescaler = 14399;
+  htim3.Init.Prescaler = 1439;
   htim3.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim3.Init.Period = 3999;
+  htim3.Init.Period = 65535;
   htim3.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim3.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
   if (HAL_TIM_Base_Init(&htim3) != HAL_OK)
@@ -445,15 +456,65 @@ static void MX_TIM3_Init(void)
   {
     Error_Handler();
   }
+  if (HAL_TIM_IC_Init(&htim3) != HAL_OK)
+  {
+    Error_Handler();
+  }
   sMasterConfig.MasterOutputTrigger = TIM_TRGO_UPDATE;
   sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
   if (HAL_TIMEx_MasterConfigSynchronization(&htim3, &sMasterConfig) != HAL_OK)
   {
     Error_Handler();
   }
+  sConfigIC.ICPolarity = TIM_INPUTCHANNELPOLARITY_FALLING;
+  sConfigIC.ICSelection = TIM_ICSELECTION_DIRECTTI;
+  sConfigIC.ICPrescaler = TIM_ICPSC_DIV1;
+  sConfigIC.ICFilter = 8;
+  if (HAL_TIM_IC_ConfigChannel(&htim3, &sConfigIC, TIM_CHANNEL_2) != HAL_OK)
+  {
+    Error_Handler();
+  }
   /* USER CODE BEGIN TIM3_Init 2 */
 
   /* USER CODE END TIM3_Init 2 */
+
+}
+
+/**
+  * @brief TIM6 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_TIM6_Init(void)
+{
+
+  /* USER CODE BEGIN TIM6_Init 0 */
+
+  /* USER CODE END TIM6_Init 0 */
+
+  TIM_MasterConfigTypeDef sMasterConfig = {0};
+
+  /* USER CODE BEGIN TIM6_Init 1 */
+
+  /* USER CODE END TIM6_Init 1 */
+  htim6.Instance = TIM6;
+  htim6.Init.Prescaler = 14399;
+  htim6.Init.CounterMode = TIM_COUNTERMODE_UP;
+  htim6.Init.Period = 3999;
+  htim6.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+  if (HAL_TIM_Base_Init(&htim6) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sMasterConfig.MasterOutputTrigger = TIM_TRGO_UPDATE;
+  sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
+  if (HAL_TIMEx_MasterConfigSynchronization(&htim6, &sMasterConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN TIM6_Init 2 */
+
+  /* USER CODE END TIM6_Init 2 */
 
 }
 
@@ -622,7 +683,11 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
-
+/* Called by HAL_TIM_IRQHandler() from TIM3_IRQHandler(). */
+void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim)
+{
+  RevCounter_OnCapture(htim);
+}
 /* USER CODE END 4 */
 
 /**

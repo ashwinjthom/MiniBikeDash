@@ -6,7 +6,7 @@
  * + rate limiter (smooth displayed output).
  *
  * Architecture:
- *   TIM3 (10 Hz) --triggers--> ADC1 --DMA--> circular buffer
+ *   TIM6 (10 Hz) --triggers--> ADC1 --DMA--> circular buffer
  *   Main loop / low-priority task reads new samples, pushes into a
  *   ring buffer, computes median over ~6-12s window, feeds median
  *   into a slow EMA, then rate-limits the final displayed value.
@@ -28,7 +28,7 @@
  *   - ADC1/ADC2 share the ADC12_COMMON clock domain (ADC12CLK),
  *     sourced from AHB or a dedicated PLL output -- confirm this
  *     is enabled and running in the CubeMX clock tree.
- *   - TIM3 TRGO trigger is selected the same way as other families:
+ *   - TIM6 TRGO trigger is selected the same way as other families:
  *     ADC_EXTERNALTRIG_T3_TRGO, edge = rising.
  */
 
@@ -64,7 +64,7 @@
  * ------------------------------------------------------------------- */
 
 extern ADC_HandleTypeDef  hadc1;
-extern TIM_HandleTypeDef  htim3;
+extern TIM_HandleTypeDef  htim6;
 
 // DMA writes raw conversions here. Single channel, circular mode,
 // small buffer -- we just need the latest few conversions at a time.
@@ -87,9 +87,9 @@ static float displayed_value = -1.0f; // final, rate-limited output (0..100%)
  *
  * Assumes CubeMX already configured:
  *   - ADC1 channel on the potentiometer's GPIO pin
- *   - ADC1 trigger source = TIM3 TRGO, external trigger conversion edge = rising
+ *   - ADC1 trigger source = TIM6 TRGO, external trigger conversion edge = rising
  *   - DMA1 stream for ADC1, circular mode, half-word data size
- *   - TIM3 configured for ADC_SAMPLE_HZ update rate, TRGO = update event
+ *   - TIM6 configured for ADC_SAMPLE_HZ update rate, TRGO = update event
  * This function just starts everything.
  * ------------------------------------------------------------------- */
 
@@ -108,11 +108,11 @@ void FuelSensor_Init(void)
     // repeatedly is unnecessary and will interrupt DMA sampling.
     HAL_ADCEx_Calibration_Start(&hadc1, ADC_SINGLE_ENDED);
 
-    // Start ADC in DMA circular mode, triggered by TIM3
+    // Start ADC in DMA circular mode, triggered by TIM6
     HAL_ADC_Start_DMA(&hadc1, (uint32_t *)adc_dma_buf, DMA_BUF_LEN);
 
     // Start the timer that triggers ADC conversions
-    HAL_TIM_Base_Start(&htim3);
+    HAL_TIM_Base_Start(&htim6);
 }
 
 /* ---------------------------------------------------------------------
