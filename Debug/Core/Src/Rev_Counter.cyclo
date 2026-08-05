@@ -1,4 +1,6 @@
-../Core/Src/Rev_Counter.c:10:19:RevCounter_Start	3
-../Core/Src/Rev_Counter.c:26:6:RevCounter_OnCapture	5
-../Core/Src/Rev_Counter.c:57:6:RevCounter_Update	2
-../Core/Src/Rev_Counter.c:65:10:RevCounter_GetRPM	1
+../Core/Src/Rev_Counter.c:11:13:RevCounter_ProcessCapture	5
+../Core/Src/Rev_Counter.c:43:19:RevCounter_Start	3
+../Core/Src/Rev_Counter.c:60:6:RevCounter_OnCapture	1
+../Core/Src/Rev_Counter.c:65:6:RevCounter_OnEveryOtherCapture	4
+../Core/Src/Rev_Counter.c:80:6:RevCounter_Update	2
+../Core/Src/Rev_Counter.c:88:10:RevCounter_GetRPM	1

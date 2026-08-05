@@ -189,7 +189,7 @@ int main(void)
 	  }
 
 	  // Keep the display refresh periodic without blocking the DMA samplers.
-	  if (now - last_display_tick >= 500U) {
+	  if (now - last_display_tick >= 100U) {
 		  last_display_tick = now;
 
 		  ST7565_ClearBuffer();
@@ -686,7 +686,7 @@ static void MX_GPIO_Init(void)
 /* Called by HAL_TIM_IRQHandler() from TIM3_IRQHandler(). */
 void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim)
 {
-  RevCounter_OnCapture(htim);
+  RevCounter_OnEveryOtherCapture(htim);
 }
 /* USER CODE END 4 */
 
