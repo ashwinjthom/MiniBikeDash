@@ -74,7 +74,7 @@ void RevCounter_OnEveryOtherCapture(TIM_HandleTypeDef *htim)
         return;
     }
 
-    RevCounter_ProcessCapture(htim, 2UL * REV_COUNTER_PULSES_PER_REV);
+    RevCounter_ProcessCapture(htim, REV_COUNTER_PULSES_PER_REV);
 }
 
 void RevCounter_Update(uint32_t now_ms)

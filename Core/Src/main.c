@@ -152,7 +152,7 @@ int main(void)
 		  FuelSensor_PollRawSample();
 		  BatterySensor_PollRawSample();
 		  // One toggle per completed poll makes this visible on an LED.
-		  HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_8);
+		  //HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_8);
 	  }
 	  // Run EMA + rate limiter at EMA_UPDATE_HZ
 	  if (now - last_update_tick >= (uint32_t)(1000.0f / EMA_UPDATE_HZ)) {
@@ -185,11 +185,11 @@ int main(void)
 			  fuel_bars = 0;
 		  }
 		  // One toggle per completed filter update makes this visible on an LED.
-		  HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_9);
+		  //HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_9);
 	  }
 
 	  // Keep the display refresh periodic without blocking the DMA samplers.
-	  if (now - last_display_tick >= 100U) {
+	  if (now - last_display_tick >= 300U) {
 		  last_display_tick = now;
 
 		  ST7565_ClearBuffer();
@@ -687,6 +687,7 @@ static void MX_GPIO_Init(void)
 void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim)
 {
   RevCounter_OnEveryOtherCapture(htim);
+  //RevCounter_OnCapture(htim);
 }
 /* USER CODE END 4 */
 

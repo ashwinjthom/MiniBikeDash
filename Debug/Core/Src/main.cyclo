@@ -12,4 +12,4 @@
 ../Core/Src/main.c:598:13:MX_DMA_Init	1
 ../Core/Src/main.c:620:13:MX_GPIO_Init	1
 ../Core/Src/main.c:687:6:HAL_TIM_IC_CaptureCallback	1
-../Core/Src/main.c:697:6:Error_Handler	1
+../Core/Src/main.c:698:6:Error_Handler	1
