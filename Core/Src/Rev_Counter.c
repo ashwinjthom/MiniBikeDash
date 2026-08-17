@@ -1,3 +1,5 @@
+// Author: Ashwin Thomas
+
 #include "Rev_Counter.h"
 
 static TIM_HandleTypeDef *capture_timer;

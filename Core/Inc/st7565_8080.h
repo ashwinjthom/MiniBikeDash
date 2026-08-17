@@ -1,8 +1,8 @@
 /*
- * Display.h
+ * st7565_8080.h
  *
  *  Created on: Jul 14, 2026
- *      Author: atdin
+ *      Author: Ashwin Thomas
  */
 
 #ifndef INC_ST7565_8080_H_
@@ -16,7 +16,7 @@
  * ST7565R 8080 parallel-interface driver
  * Target: STM32G431CBTx (LQFP48), for the ERC12832-1 (128x32) COG module
  *
- * Pinout, taken from the MCU pinout view:
+ * Pinout:
  *
  *   Data bus (NOTE: bit-reversed across the port):
  *     DB7 = PA0     DB6 = PA1     DB5 = PA2     DB4 = PA3

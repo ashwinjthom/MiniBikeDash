@@ -1,7 +1,10 @@
 /*
  * fuel_level_filter.h
  *
- * Public API for fuel level sensing on STM32G4 (ADC1 + TIM3 + DMA),
+ *  Created on: Jul 27, 2026
+ * 		Author: Ashwin Thomas
+ *
+ * Public API for fuel level sensing on STM32G4 (ADC1 + TIM6 + DMA),
  * with median filtering, EMA smoothing, and rate-limited output.
  *
  * See fuel_level_filter.c for full implementation notes.
@@ -19,7 +22,7 @@ extern "C" {
  * ------------------------------------------------------------------- */
 
 /**
- * @brief Initialize the fuel sensor filter chain and start ADC1/TIM3.
+ * @brief Initialize the fuel sensor filter chain and start ADC1/TIM6.
  *
  * Performs ADC self-calibration (required on G4), starts ADC1 in
  * circular DMA mode, and starts TIM3 to trigger conversions at
@@ -78,7 +81,7 @@ uint8_t FuelSensor_IsReady(void);
  * numbers in two separate files.
  * ------------------------------------------------------------------- */
 
-#define ADC_SAMPLE_HZ           10      // how often TIM3 triggers ADC1 / how often to call FuelSensor_PollRawSample()
+#define ADC_SAMPLE_HZ           10      // how often TIM6 triggers ADC1 / how often to call FuelSensor_PollRawSample()
 #define EMA_UPDATE_HZ           1.0f    // how often to call FuelSensor_Update()
 
 #ifdef __cplusplus

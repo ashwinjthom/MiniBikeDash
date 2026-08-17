@@ -1,3 +1,10 @@
+/*
+ * st7565_gfx.h
+ *
+ *  Created on: Jul 14, 2026
+ *      Author: Ashwin Thomas
+ */
+
 #ifndef ST7565_GFX_H
 #define ST7565_GFX_H
 
@@ -6,7 +13,7 @@
  *
  * Typical usage in main():
  *
- *   ST7565_Init(0x20);          // once, at startup
+ *   ST7565_Init(0x20);          // once, at startup, sets initial contrast
  *   ...
  *   ST7565_ClearBuffer();
  *   ST7565_DrawNumber(0, 0, 42);

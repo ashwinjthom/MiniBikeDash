@@ -14,6 +14,7 @@
   * If no LICENSE file comes with this software, it is provided AS-IS.
   *
   ******************************************************************************
+  * @author Ashwin Thomas
   */
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
@@ -129,6 +130,7 @@ int main(void)
   if (RevCounter_Start(&htim3, TIM_CHANNEL_2) != HAL_OK) {
     Error_Handler();
   }
+  /* Display must be initialized after gpio because gpio gets reinitialized. */
   ST7565_Init(0x00);   // bus init + panel init; 0x00 is a starting contrast value, tune to taste
   uint32_t last_poll_tick = HAL_GetTick();
   uint32_t last_update_tick = HAL_GetTick();

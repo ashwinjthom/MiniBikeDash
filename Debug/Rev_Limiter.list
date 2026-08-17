@@ -35,17 +35,17 @@ Idx Name          Size      VMA       LMA       File off  Algn
                   CONTENTS, READONLY, DEBUGGING, OCTETS
  15 .debug_rnglists 000012f5  00000000  00000000  00029948  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 16 .debug_macro  00024178  00000000  00000000  0002ac3d  2**0
+ 16 .debug_macro  00024179  00000000  00000000  0002ac3d  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 17 .debug_line   0001bcf2  00000000  00000000  0004edb5  2**0
+ 17 .debug_line   0001bcf5  00000000  00000000  0004edb6  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 18 .debug_str    000eb7e1  00000000  00000000  0006aaa7  2**0
+ 18 .debug_str    000eb7e1  00000000  00000000  0006aaab  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 19 .comment      00000043  00000000  00000000  00156288  2**0
+ 19 .comment      00000043  00000000  00000000  0015628c  2**0
                   CONTENTS, READONLY
- 20 .debug_frame  00006878  00000000  00000000  001562cc  2**2
+ 20 .debug_frame  00006878  00000000  00000000  001562d0  2**2
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 21 .debug_line_str 0000004f  00000000  00000000  0015cb44  2**0
+ 21 .debug_line_str 0000004f  00000000  00000000  0015cb48  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
 
 Disassembly of section .text:
@@ -1592,6 +1592,7 @@ int main(void)
     Error_Handler();
  8000d10:	f000 fc33 	bl	800157a <Error_Handler>
   }
+  /* Display must be initialized after gpio because gpio gets reinitialized. */
   ST7565_Init(0x00);   // bus init + panel init; 0x00 is a starting contrast value, tune to taste
  8000d14:	2000      	movs	r0, #0
  8000d16:	f000 fd1a 	bl	800174e <ST7565_Init>

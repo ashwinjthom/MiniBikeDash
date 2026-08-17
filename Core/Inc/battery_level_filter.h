@@ -1,3 +1,13 @@
+/*
+ * battery_level.h
+ *
+ *  Created on: Jul 28, 2026
+ *      Author: Ashwin Thomas
+ *
+ * Battery Level Sensing on STM32G4 (ADC2 + TIM6 + DMA),
+ * with median filtering,  EMA smoothing, and rate-limited output.
+ */
+
 /* Filtered battery-capacity sampling on ADC2_IN15 (PB15). */
 #ifndef BATTERY_LEVEL_FILTER_H
 #define BATTERY_LEVEL_FILTER_H

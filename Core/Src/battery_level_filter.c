@@ -1,3 +1,37 @@
+// Author: Ashwin Thomas
+
+/*
+ * battery_level_filter.c
+ *
+ * Battery level sensing on STM32G4 using ADC2, timer-triggered DMA sampling,
+ * median filtering (rejects voltage spikes)
+ *
+ * Architecture:
+ *   TIM6 (10 Hz) --triggers--> ADC1 --DMA--> circular buffer
+ *   Main loop / low-priority task reads new samples, pushes into a
+ *   ring buffer, computes median over ~6-12s window, feeds median
+ *   into a slow EMA, then rate-limits the final displayed value.
+ *
+ * Tune the #defines below to your tank size, ADC vref, and desired
+ * response time.
+ *
+ * STM32G4-specific notes:
+ *   - ADC1 requires a self-calibration (HAL_ADCEx_Calibration_Start)
+ *     before the first conversion. This is handled in FuelSensor_Init().
+ *   - G4's ADC supports hardware oversampling (up to 1024x with
+ *     configurable right-shift), which reduces raw sample jitter
+ *     for free before it ever reaches the median filter below.
+ *     Enable via CubeMX: ADC2 -> Parameter Settings -> Oversampling
+ *     Mode. A ratio of 16-64x with the shift
+ *     set to keep ~12-bit output range is a reasonable start.
+ *   - ADC1/ADC2 share the ADC12_COMMON clock domain (ADC12CLK),
+ *     sourced from AHB or a dedicated PLL output -- confirm this
+ *     is enabled and running in the CubeMX clock tree.
+ *   - TIM6 TRGO trigger is selected the same way as other families:
+ *     ADC_EXTERNALTRIG_T3_TRGO, edge = rising.
+ */
+
+
 /* ADC2_IN15 / PB15 battery-capacity filter: median -> EMA -> rate limiter. */
 #include "main.h"
 #include "battery_level_filter.h"

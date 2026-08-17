@@ -1,7 +1,22 @@
+/*
+ * Rev_Counter.h
+ *
+ *  Created on: Aug 1, 2026
+ *      Author: Ashwin Thomas
+ */
+
 #ifndef INC_REV_COUNTER_H_
 #define INC_REV_COUNTER_H_
 
 #include "main.h"
+
+/*
+ * Tachometer for Predator 212cc and clone engines
+ * Designed to be use a filter circuit for the killwire but can use any digital signal
+ * 1 pulse = 1 revolution
+ *
+ * TIM3 CH2 - PB5
+ */
 
 /* TIM3 is configured for a 100 kHz counter clock: one tick = 10 us. */
 #define REV_COUNTER_TIMER_HZ          100000UL
